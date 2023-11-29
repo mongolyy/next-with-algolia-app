@@ -14,7 +14,7 @@
     "search-insights": "^2.11.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
+    "@types/node": "^20.10.0",
     "@types/react": "18.2.39",
     "@types/react-dom": "18.2.17",
     "eslint": "8.54.0",
