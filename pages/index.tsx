@@ -9,13 +9,13 @@ import { createURL, searchStateToURL, pathToSearchState } from '../utils'
 
 // Demo key provided by https://github.com/algolia/react-instantsearch
 const searchClient = algoliasearch(
-  'latency',
-  '6be0576ff61c053d5f9a3225e2a90f76'
+  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || 'latency',
+  process.env.NEXT_PUBLIC_ALGOLIA_API_KEY || '6be0576ff61c053d5f9a3225e2a90f76'
 )
 
 const defaultProps = {
   searchClient,
-  indexName: 'instant_search',
+  indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX || 'instant_search',
 }
 
 export default function Page({
