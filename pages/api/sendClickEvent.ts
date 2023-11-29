@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     apiKey: ALGOLIA_API_KEY,
   })
 
-  searchInsights('clickedObjectIDsAfterSearch', {
+  await searchInsights('clickedObjectIDsAfterSearch', {
     userToken: 'user-token',
     index: ALGOLIA_INDEX,
     eventName: 'click',
