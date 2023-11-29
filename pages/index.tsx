@@ -1,84 +1,39 @@
-import type { InferGetServerSidePropsType, GetServerSideProps } from 'next'
-import type { SearchState } from 'react-instantsearch-core'
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/router'
-import algoliasearch from 'algoliasearch/lite'
-import { findResultsState } from 'react-instantsearch-dom/server'
-import { Search } from '../components/Search'
-import { createURL, searchStateToURL, pathToSearchState } from '../utils'
+import { GetServerSideProps } from 'next'
+import algoliasearch from 'algoliasearch'
 
-// Demo key provided by https://github.com/algolia/react-instantsearch
-const searchClient = algoliasearch(
-  process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || 'latency',
-  process.env.NEXT_PUBLIC_ALGOLIA_API_KEY || '6be0576ff61c053d5f9a3225e2a90f76'
-)
-
-const defaultProps = {
-  searchClient,
-  indexName: process.env.NEXT_PUBLIC_ALGOLIA_INDEX || 'instant_search',
-}
-
-export default function Page({
-  resultsState,
-  searchState: initialState,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const router = useRouter()
-  const debouncedSetState = useRef()
-  const [searchState, setSearchState] = useState(initialState)
-
-  const onSearchStateChange = (state: SearchState) => {
-    clearTimeout(debouncedSetState.current)
-    ;(debouncedSetState as any).current = setTimeout(() => {
-      const href = searchStateToURL(state)
-
-      router.push(href, href, { shallow: true })
-    }, 700)
-
-    setSearchState(state)
+export default function Index({ result, queryId }: { result: any[], queryId: string }) {
+  const onClick = (objectId: string, position: number) => {
+    fetch('/api/sendClickEvent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ queryId, objectId: objectId, position: position }),
+    })
+    console.log('click')
   }
 
-  useEffect(() => {
-    if (router) {
-      router.beforePopState((state: SearchState) => {
-        const { url } = state
-        setSearchState(pathToSearchState(url))
-
-        return true
-      })
-    }
-  }, [router])
-
   return (
-    <Search
-      {...defaultProps}
-      searchState={searchState}
-      resultsState={resultsState}
-      onSearchStateChange={onSearchStateChange}
-      createURL={createURL}
-    />
+    <div>
+      <h1>SSR</h1>
+      <ul>
+        {result.map((item, index) => (
+          <li key={item.objectID}>
+            {item.name}&nbsp;&nbsp;
+            <button onClick={() => onClick(item.objectID, index + 1)}>気になる</button>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
-interface PageProps {
-  searchState: SearchState
-  resultsState: unknown
-}
+export const getServerSideProps: GetServerSideProps = async () => {
+  const client = algoliasearch(process.env.ALGOLIA_APP_ID ?? '', process.env.ALGOLIA_API_KEY ?? '')
+  const index = client.initIndex(process.env.ALGOLIA_INDEX ?? '')
 
-export const getServerSideProps: GetServerSideProps<PageProps> = async ({
-  resolvedUrl,
-}) => {
-  const searchState = pathToSearchState(resolvedUrl)
-  const resultsState = await findResultsState(Search, {
-    ...defaultProps,
-    searchState,
-  })
-
-  // Pre-serialize `findResultsState` object return so Next.js' serialization checks pass
-  // https://github.com/vercel/next.js/issues/11993
+  const result = await index.search('apple', { clickAnalytics: true })
   return {
-    props: {
-      resultsState: JSON.parse(JSON.stringify(resultsState)),
-      searchState,
-    },
+    props: { result: result.hits, queryId: result.queryID },
   }
 }
