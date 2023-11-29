@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import searchInsights from 'search-insights'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, _res: NextApiResponse) {
   const { queryId, objectId, position } = req.body
   const { ALGOLIA_APP_ID, ALGOLIA_API_KEY, ALGOLIA_INDEX } = process.env
 
@@ -22,5 +22,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     positions: [position],
   })
 
-  res.status(200).json({ success: true })
+  // res.status(200).json({ success: true })
 }
